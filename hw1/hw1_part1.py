@@ -12,19 +12,25 @@ def get_df(file, column):
     sorted = df.sort([column])
     return sorted
 
-def requests_over_time(df):
+def requests_over_time(file, column):
+    df = get_df(file, column)
     list_y = []
     total = 0
-    for i in range(len(df.index)):
-        total = total + 1
-        list_y.append(total)
+    # for i in range(len(df.index)):
+    #     total = total + 1
+    #     list_y.append(total)
 
     list_x = []
     for row in df.itertuples():
         s = str(row[1])
         date = s.replace(" 00:00:00", "")
         new_date = date.replace("-", "")
-        list_x.append(int(new_date))
+        if new_date.isdigit():
+            list_x.append(int(new_date))
+
+    for i in range(len(list_x)):
+        total = total + 1
+        list_y.append(total)
 
     return(list_x, list_y)
 
@@ -34,7 +40,7 @@ def get_subgroups(file, column1, column2):
     grouped = df.groupby(column2).groups
     list_sorted = []
     list_dfs = []
-
+    print(grouped)
     for subtype in grouped.items():
         list_sorted.append(subtype[0])
     for subtype in list_sorted:
@@ -44,8 +50,7 @@ def get_subgroups(file, column1, column2):
     return list_dfs
 
 def get_plot_main_group(file, column1):
-    df =  get_df(file, column1)
-    (list_x, list_y) = requests_over_time(df)
+    (list_x, list_y) = requests_over_time(file, column1)
     plt.plot(list_x, list_y)
     plt.show()
 
@@ -67,22 +72,8 @@ def get_summ_by_characteristic(file, characteristic, column):
         list_1.append(len(sorted[i]))
 
     new_df = pd.Series(list_1, list_0)
-    print(new_df)
+    return new_df
 
-    df_subgroups = df_main.groupby(column).groups
-
-    dict_zips = {}
-
-    for i in df_subgroups:
-        for index in df_subgroups[i]:
-            zip = (df_main.iloc[index]["ZIP Code"])
-            if math.isnan(zip):
-                continue
-            if zip not in dict_zips:
-                dict_zips[zip] = 1
-            else:
-                dict_zips[zip] += 1
-        print((i, dict_zips))
 
 def get_response_time(file, column1, column2):
     df = get_df(file, column1)
@@ -111,6 +102,16 @@ def get_most(file, column):
             most = item[0]
             most_tup = (item)
     return most_tup
+
+def get_counts_by_value(file, column, value):
+    df = pd.read_csv(file)
+    index = df.columns.get_loc(column) + 1
+    count = 0
+    for tup in df.itertuples():
+        if tup[index] == value:
+            count += 1
+    return count
+
 
 
 
