@@ -12,8 +12,8 @@ def get_df(file, column):
     sorted = df.sort([column])
     return sorted
 
-def requests_over_time(file, column):
-    df = get_df(file, column)
+def requests_over_time(df):
+    #df = get_df(file, column)
     list_y = []
     total = 0
     # for i in range(len(df.index)):
@@ -34,32 +34,38 @@ def requests_over_time(file, column):
 
     return(list_x, list_y)
 
-def get_subgroups(file, column1, column2):
-    df = get_df(file, column1)
+def get_subgroups(file, column, subgroup):
+    df = pd.read_csv(file)
 
-    grouped = df.groupby(column2).groups
+    grouped = df.groupby(column).groups
     list_sorted = []
     list_dfs = []
-    print(grouped)
+    #print(grouped)
     for subtype in grouped.items():
         list_sorted.append(subtype[0])
+    #print(list_sorted)
     for subtype in list_sorted:
-        new_df = get_df(file, column2)
-        new_df = new_df[new_df[column2] == str(subtype)]
-        list_dfs.append(new_df)
-    return list_dfs
+        if subtype == subgroup:
+            new_df = pd.read_csv(file)
+            new_df = new_df[new_df[column] == str(subtype)]
+            #list_dfs.append(new_df)
+            #print(list_dfs)
+    return new_df
 
 def get_plot_main_group(file, column1):
-    (list_x, list_y) = requests_over_time(file, column1)
+    df = get_df(file, column1)
+    (list_x, list_y) = requests_over_time(df)
     plt.plot(list_x, list_y)
     plt.show()
 
-def get_plots_subgroups(file, column1, column2):
-    list_dfs = get_subgroups(file, column1, column2)
-    for df in list_dfs:
-        (list_x, list_y)= requests_over_time(df)
-        plt.plot(list_x, list_y)
-        plt.show
+def get_plots_subgroup(file, column1, column2, subgroup):
+    df = get_subgroups(file, column2, subgroup)
+    df[column1] = pd.to_datetime(df[column1])
+    sorted = df.sort([column1])
+    print(sorted)
+    (list_x, list_y)= requests_over_time(sorted)
+    plt.plot(list_x, list_y)
+    plt.show
 
 def get_summ_by_characteristic(file, characteristic, column):
     df_main = pd.read_csv(file)
