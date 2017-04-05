@@ -16,6 +16,7 @@ def get_df(file, column):
         file: CSV file to read, as a string
         column: specific column to be converted to datetimes. Must
         contain dates.
+                ex: "Creation Date"
 
     Returns: A dataframe sorted by the column with the datetime objects.
     '''
@@ -61,14 +62,13 @@ def get_subgroups(file, column, subgroup):
 
     Inputs:
             file: the CSV file to be read, as a string
-            column: the column containing the subgroup
+            column: the column containing the subgroup, as a string
                     ex: for Graffiti, "What Type of Surface is the Graffiti on?"
                         if you want to receive info about graffiti on metal
                         specifically. Can also be "ZIP Code", "Ward", etc.
-            subgroup: the specific subgroup to return.
+            subgroup: the specific subgroup to return, as a string
                     ex: for the example above, the subgroup would be "Metal"
     Returns: a dataframe
-
     '''
 
     df = pd.read_csv(file)
@@ -88,21 +88,60 @@ def get_subgroups(file, column, subgroup):
     return new_df
 
 def get_plot_main_group(file, column1):
+    '''
+    Creates a plot of the number of requests over time for a main group.
+
+    Inputs:
+        file: CSV file to be read, as a string
+        column1: specific column to be converted to datetimes. Must
+        contain dates, as a string
+                ex: "Creation Date"
+
+    Returns: plot from matplotlib.
+    '''
+
     df = get_df(file, column1)
     (list_x, list_y) = requests_over_time(df)
     plt.plot(list_x, list_y)
     plt.show()
 
 def get_plots_subgroup(file, column1, column2, subgroup):
+    '''
+    Creates a plot of the number of requests over time for a main group.
+
+    Inputs:
+        file: the CSV file to be read, as a string
+        column1: specific column to be converted to datetimes. Must
+        contain dates, as a string
+                ex: "Creation Date"
+        column 2: column: the column containing the subgroup, as a string
+        subgroup: the specific subgroup to return, as a string
+
+    Returns: plot from matplotlib
+
+    '''
     df = get_subgroups(file, column2, subgroup)
     df[column1] = pd.to_datetime(df[column1])
     sorted = df.sort([column1])
-    print(sorted)
     (list_x, list_y)= requests_over_time(sorted)
     plt.plot(list_x, list_y)
     plt.show
 
-def get_summ_by_characteristic(file, characteristic, column):
+def get_summ_by_characteristic(file, characteristic):
+    '''
+    Gets counts, in a dataframe of a certain 311 request grouped by a
+    certain characteristic.
+
+    Inputs:
+            file: the CSV file to be read, as a string
+            characteristic: the characteristic you want to see counts by
+                    ex: using "ZIP Code" for "Graffiti.csv" will
+                    tell you how many Graffiti calls were made from
+                    each Zip Code.
+
+    Returns: dataframe where the first column is the characteristic and
+    the second column is the count.
+    '''
     df_main = pd.read_csv(file)
 
     sorted = df_main.groupby(characteristic).groups
@@ -117,17 +156,24 @@ def get_summ_by_characteristic(file, characteristic, column):
 
 
 def get_response_time(file, column1, column2):
+    '''
+    Computes the average request response time for a dataframe.
+
+    Inputs:
+            file: CSV file to read, as a string
+            column1: Column header corresponding to request
+            creation date
+            column2: Column header corresponding to request
+            completion date
+
+    Returns: Average request time, as a float.
+    '''
+
     df = get_df(file, column1)
     df[column2] = pd.to_datetime(df[column2])
     list_response_times = []
     for row in df.itertuples():
         if str(row[3]) != "NaT":
-            # cd = str(row[1])
-            # creation_date = cd.replace(" 00:00:00", "")
-            # int_creation_date = creation_date.replace("-", "")
-            # cod = str(row[3])
-            # completion_date = cod.replace(" 00:00:00", "")
-            # int_completion_date = completion_date.replace("-", "")
             list_response_times.append(row[3] - row[1])
     full_time = 0
     for time in list_response_times:
@@ -137,8 +183,12 @@ def get_response_time(file, column1, column2):
 
     return avg_time
 
-
 def get_most(file, column):
+    '''
+    Gets the specific value from a specific column that has the
+    most requests of all the unique values in that column.
+
+    '''
     df = pd.read_csv(file)
     grouped = df.groupby(column).groups
     list_most = []
