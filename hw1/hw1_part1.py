@@ -5,21 +5,40 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import math
+from datetime import timedelta
 
 def get_df(file, column):
+    '''
+    Returns: A dataframe with a specific column with all values converted
+    to datetime objects.
+
+    Inputs:
+        file: CSV file to read, as a string
+        column: specific column to be converted to datetimes. Must
+        contain dates.
+
+    Returns: A dataframe sorted by the column with the datetime objects.
+    '''
     df = pd.read_csv(file)
     df[column] = pd.to_datetime(df[column])
+
+    #sort by datetime, from earliest
     sorted = df.sort([column])
     return sorted
 
 def requests_over_time(df):
-    #df = get_df(file, column)
+    '''
+    Calculates both the span of time and the number of requests for use
+    in creating a plot from matplotlib to show requests over time.
+
+    Inputs:
+            df: a dataframe
+
+    Returns: A tuple of two lists, one for the x axis of the plot (dates over time) and
+    one for the y-axis of the plot (requests over time).
+    '''
     list_y = []
     total = 0
-    # for i in range(len(df.index)):
-    #     total = total + 1
-    #     list_y.append(total)
-
     list_x = []
     for row in df.itertuples():
         s = str(row[1])
@@ -28,6 +47,8 @@ def requests_over_time(df):
         if new_date.isdigit():
             list_x.append(int(new_date))
 
+    # the number of requests is equal to the length of list_x.
+    # for each request, the total number of requests increases by one.
     for i in range(len(list_x)):
         total = total + 1
         list_y.append(total)
@@ -35,21 +56,35 @@ def requests_over_time(df):
     return(list_x, list_y)
 
 def get_subgroups(file, column, subgroup):
+    '''
+    Creates a dataframe that only contains rows from a certain subgroup.
+
+    Inputs:
+            file: the CSV file to be read, as a string
+            column: the column containing the subgroup
+                    ex: for Graffiti, "What Type of Surface is the Graffiti on?"
+                        if you want to receive info about graffiti on metal
+                        specifically. Can also be "ZIP Code", "Ward", etc.
+            subgroup: the specific subgroup to return.
+                    ex: for the example above, the subgroup would be "Metal"
+    Returns: a dataframe
+
+    '''
+
     df = pd.read_csv(file)
 
     grouped = df.groupby(column).groups
     list_sorted = []
-    list_dfs = []
-    #print(grouped)
+
     for subtype in grouped.items():
         list_sorted.append(subtype[0])
-    #print(list_sorted)
+
+    new_df = None
     for subtype in list_sorted:
         if subtype == subgroup:
             new_df = pd.read_csv(file)
             new_df = new_df[new_df[column] == str(subtype)]
-            #list_dfs.append(new_df)
-            #print(list_dfs)
+
     return new_df
 
 def get_plot_main_group(file, column1):
@@ -86,14 +121,21 @@ def get_response_time(file, column1, column2):
     df[column2] = pd.to_datetime(df[column2])
     list_response_times = []
     for row in df.itertuples():
-        cd = str(row[1])
-        creation_date = cd.replace(" 00:00:00", "")
-        int_creation_date = creation_date.replace("-", "")
-        cod = str(row[3])
-        completion_date = cod.replace(" 00:00:00", "")
-        int_completion_date = completion_date.replace("-", "")
-        list_response_times.append(int(int_completion_date) - int(int_creation_date))
-    return list_response_times
+        if str(row[3]) != "NaT":
+            # cd = str(row[1])
+            # creation_date = cd.replace(" 00:00:00", "")
+            # int_creation_date = creation_date.replace("-", "")
+            # cod = str(row[3])
+            # completion_date = cod.replace(" 00:00:00", "")
+            # int_completion_date = completion_date.replace("-", "")
+            list_response_times.append(row[3] - row[1])
+    full_time = 0
+    for time in list_response_times:
+        full_time = full_time + time.days
+    full_time_float = full_time
+    avg_time = full_time_float / len(list_response_times)
+
+    return avg_time
 
 
 def get_most(file, column):
@@ -103,6 +145,7 @@ def get_most(file, column):
     for group in grouped:
         list_most.append((len(grouped[group]), group))
     most = 0
+    most_tup = None
     for item in list_most:
         if item[0] > most:
             most = item[0]
