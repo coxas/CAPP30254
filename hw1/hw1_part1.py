@@ -188,7 +188,16 @@ def get_most(file, column):
     Gets the specific value from a specific column that has the
     most requests of all the unique values in that column.
 
+    Inputs:
+            file: CSV file to be read, as a string
+            column: the column from which you want the
+            value with the highest count.
+                ex: "Graffiti.csv" and "ZIP Code" would return
+                the zip code with the most graffiti requests.
+    Returns: Tuple containing the count and the value.
+                ex: (5600, 60615)
     '''
+
     df = pd.read_csv(file)
     grouped = df.groupby(column).groups
     list_most = []
@@ -203,6 +212,19 @@ def get_most(file, column):
     return most_tup
 
 def get_counts_by_value(file, column, value):
+    '''
+    Returns the count for any value specified
+
+    Inputs:
+            file: CSV to be read, as a string
+            column: the column containing the specific value
+            value: the specific value you want a count for
+                    ex: "Graffiti.csv", "ZIP Code", and "60615"
+                    will return the number of graffiti requests
+                    made from 60615. It's like get_summ_by_characteristic,
+                    but returns the count for one value, not all of them.
+    Returns: Count, an int
+    '''
     df = pd.read_csv(file)
     index = df.columns.get_loc(column) + 1
     count = 0
