@@ -153,18 +153,24 @@ def get_stat_summ(file, column):
 
 def fill_values(file):
     df = get_df(file)
+    dict_means = {}
     headers = df.dtypes.index
     for row in df.itertuples():
 
             for i in range(len(row)):
 
                 if math.isnan((row[i])):
-                    mean = get_mean(file, i)
+                    #mean = get_mean(file, i)
                     col_name = headers[i - 1]
+                    if col_name in dict_means:
+                        mean = dict_means[col_name]
+                    else:
+                        mean = get_mean(file, i)
+                        dict_means[col_name] = mean
                     df.set_value(row[0], col_name, mean)
                     print(df.iloc[row[0], i-1])
 
-    return df
+    #return df
 
 
 
