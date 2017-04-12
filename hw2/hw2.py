@@ -168,9 +168,9 @@ def fill_values(file):
                         mean = get_mean(file, i)
                         dict_means[col_name] = mean
                     df.set_value(row[0], col_name, mean)
-                    print(df.iloc[row[0], i-1])
+                    #print(df.iloc[row[0], i-1])
 
-    #return df
+    return df
 
 
 
