@@ -99,15 +99,22 @@ def get_most(file, column):
 def get_mean(file, column):
 
     df = get_df(file)
-    index = df.columns.get_loc(column) + 1
-    list = []
+    #print(type(column))
+    if type(column) is str:
+        index = df.columns.get_loc(column) + 1
+    elif type(column) is int:
+        index = column
+    list_mean = []
     for tup in df.itertuples():
-        list.append(tup[index])
-    list.sort()
+        if math.isnan(tup[index]):
+            continue
+        else:
+            list_mean.append(tup[index])
+    list_mean.sort()
     total = 0
-    for i in list:
+    for i in list_mean:
         total = total + i
-    mean = total / len(list)
+    mean = total / len(list_mean)
     new_mean = float("{:.2f}".format(mean))
     return new_mean
 
@@ -146,11 +153,18 @@ def get_stat_summ(file, column):
 
 def fill_values(file):
     df = get_df(file)
-    list_cols = []
+    headers = df.dtypes.index
     for row in df.itertuples():
-        if row[0] == 0:
+
             for i in range(len(row)):
-                print(type(row[i]))
+
+                if math.isnan((row[i])):
+                    mean = get_mean(file, i)
+                    col_name = headers[i - 1]
+                    df.set_value(row[0], col_name, mean)
+                    print(df.iloc[row[0], i-1])
+
+    return df
 
 
 
