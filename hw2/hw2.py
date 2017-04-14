@@ -3,7 +3,7 @@
 # Homework 2
 
 import pandas as pd
-import matplotlib.pyplot as plt
+from patsy import dmatrices
 import math
 
 
@@ -96,9 +96,9 @@ def get_most(file, column):
             most_tup = (item)
     return most_tup
 
-def get_mean(file, column):
+def get_mean(df, column):
 
-    df = get_df(file)
+    #df = get_df(file)
     #print(type(column))
     if type(column) is str:
         index = df.columns.get_loc(column) + 1
@@ -118,6 +118,16 @@ def get_mean(file, column):
     new_mean = float("{:.2f}".format(mean))
     return new_mean
 
+def get_max_and_min(df, column):
+    #df = get_df(file)
+    index = df.columns.get_loc(column) + 1
+    list_vals = []
+    for tup in df.itertuples():
+        list_vals.append(tup[index])
+    list_vals.sort()
+    min = list_vals[0]
+    max = list_vals[-1]
+    return(min, max)
 
 def get_stat_summ(file, column):
     '''
@@ -131,18 +141,18 @@ def get_stat_summ(file, column):
     mean = get_mean(file, column)
 
     index = df.columns.get_loc(column) + 1
-    list = []
+    list_vals = []
     for tup in df.itertuples():
-        list.append(tup[index])
-    list.sort()
+        list_vals.append(tup[index])
+    list_vals.sort()
 
-    if len(list) % 2 == 0:
-        length = len(list)
-        med_1 = list[int(length / 2) - 1]
-        med_2 = list[int(length / 2)]
+    if len(list_vals) % 2 == 0:
+        length = len(list_vals)
+        med_1 = list_vals[int(length / 2) - 1]
+        med_2 = list_vals[int(length / 2)]
         median = (med_1 + med_2) / 2
-    elif len(list) % 2 == 1:
-        length = len(list)
+    elif len(list_vals) % 2 == 1:
+        length = len(list_vals)
         median = (length // 2)
 
     most_tup = get_most(file, column)
@@ -151,8 +161,9 @@ def get_stat_summ(file, column):
             " , mode is " + str(mode))
 
 
-def fill_values(file):
-    df = get_df(file)
+
+def fill_values(df):
+    #df = get_df(file)
     dict_means = {}
     headers = df.dtypes.index
     for row in df.itertuples():
@@ -165,15 +176,41 @@ def fill_values(file):
                     if col_name in dict_means:
                         mean = dict_means[col_name]
                     else:
-                        mean = get_mean(file, i)
+                        mean = get_mean(df, i)
                         dict_means[col_name] = mean
                     df.set_value(row[0], col_name, mean)
                     #print(df.iloc[row[0], i-1])
 
     return df
 
+def discretize(df, column, num_buckets):
+    index = df.columns.get_loc(column) + 1
+    min = get_max_and_min(df, column)[0]
+    max = get_max_and_min(df, column)[1]
+    partition = round((max - min) / num_buckets)
+    for i in range(num_buckets):
+        for row in df.itertuples():
+            if row[index] > partition * (i) and row[index] < partition * (i + 1):
+                range_part = partition * (i + 1)
+                df.set_value(row[0], column, range_part)
+    return df
 
+def make_binary(df, column):
+    #df = get_df(file)
+    index = df.columns.get_loc(column) + 1
+    for row in df.itertuples():
+        if row[index] == 0:
+            continue
+        elif row[index] != 0:
+            df.set_value(row[0], column, 1)
+    return df
 
+def log_reg(file, dis_var, num_buckets, bin_var):
+    df = get_df(file)
+    filled_df = fill_values(df)
+    dis_df = discretize(filled_df, dis_var, num_buckets)
+    bin_df = make_binary(dis_df, bin_var)
+    return bin_df
 
 
 
