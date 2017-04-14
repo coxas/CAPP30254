@@ -5,6 +5,8 @@
 import pandas as pd
 from patsy import dmatrices
 import math
+import numpy as np
+from sklearn.linear_model import LogisticRegression
 
 
 # For part 1: Read Data
@@ -161,7 +163,7 @@ def get_stat_summ(file, column):
             " , mode is " + str(mode))
 
 
-
+# For Part 3: Pre-Process and Clean Data
 def fill_values(df):
     #df = get_df(file)
     dict_means = {}
@@ -183,6 +185,7 @@ def fill_values(df):
 
     return df
 
+# For Part 4: Generate Features, Predictors
 def discretize(df, column, num_buckets):
     index = df.columns.get_loc(column) + 1
     min = get_max_and_min(df, column)[0]
@@ -205,12 +208,22 @@ def make_binary(df, column):
             df.set_value(row[0], column, 1)
     return df
 
+# Parts 5 and 6: Build and Evaluate Classifier
 def log_reg(file, dis_var, num_buckets, bin_var):
     df = get_df(file)
     filled_df = fill_values(df)
     dis_df = discretize(filled_df, dis_var, num_buckets)
     bin_df = make_binary(dis_df, bin_var)
-    return bin_df
+    # I learned how to do the following from this example: http://nbviewer.jupyter.org/gist/justmarkham/6d5c061ca5aee67c4316471f8c2ae976
+    # Not sure if this is what we were supposed to do or not
+    y, X = dmatrices('SeriousDlqin2yrs ~ RevolvingUtilizationOfUnsecuredLines + age + '
+                     'DebtRatio + NumberOfOpenCreditLinesAndLoans + zipcode + '
+                     'MonthlyIncome + NumberOfOpenCreditLinesAndLoans + NumberOfTimes90DaysLate',
+                     bin_df, return_type="dataframe")
+    y = np.ravel(y)
+    model = LogisticRegression()
+    model_fitted = model.fit(X, y)
+    return model_fitted.score(X, y)
 
 
 
