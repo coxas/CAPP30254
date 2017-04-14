@@ -12,16 +12,12 @@ from sklearn.linear_model import LogisticRegression
 # For part 1: Read Data
 def get_df(file):
     '''
-    Returns: A dataframe with a specific column with all values converted
-    to datetime objects.
+    Reads a csv file into a pandas dataframe
 
     Inputs:
         file: CSV file to read, as a string
-        column: specific column to be converted to datetimes. Must
-        contain dates.
-                ex: "Creation Date"
 
-    Returns: A dataframe sorted by the column with the datetime objects.
+    Returns: A pandas data frame
     '''
     df = pd.read_csv(file)
     return df
@@ -99,9 +95,16 @@ def get_most(file, column):
     return most_tup
 
 def get_mean(df, column):
+    '''
+    Calculates the mean value for a given column.
 
-    #df = get_df(file)
-    #print(type(column))
+    Inputs:
+            df: a pandas dataframe
+            column: specific column from which to generate a mean value
+
+    Returns: mean, an integer
+    '''
+
     if type(column) is str:
         index = df.columns.get_loc(column) + 1
     elif type(column) is int:
@@ -121,7 +124,16 @@ def get_mean(df, column):
     return new_mean
 
 def get_max_and_min(df, column):
-    #df = get_df(file)
+    '''
+    Retrieves the max and min values from a specified column.
+
+     Inputs:
+            df: a pandas dataframe
+            column: specific column from which to generate max and min
+
+    Returns: a tuple containing (min, max)
+    '''
+
     index = df.columns.get_loc(column) + 1
     list_vals = []
     for tup in df.itertuples():
@@ -133,10 +145,13 @@ def get_max_and_min(df, column):
 
 def get_stat_summ(file, column):
     '''
+    Calculates the mean, median, and mode of a specific column
 
     Inputs:
             file: csv to be read
             column: column must have integer data
+
+    Returns: string detailing the values of the mean, median, and mode
     '''
     df = get_df(file)
 
@@ -165,7 +180,14 @@ def get_stat_summ(file, column):
 
 # For Part 3: Pre-Process and Clean Data
 def fill_values(df):
-    #df = get_df(file)
+    '''
+    Fills in NaN cell values with the mean from that column
+
+    Inputs:
+            df: a pandas data frame
+
+    Returns: pandas data frame with no missing values
+    '''
     dict_means = {}
     headers = df.dtypes.index
     for row in df.itertuples():
@@ -173,7 +195,6 @@ def fill_values(df):
             for i in range(len(row)):
 
                 if math.isnan((row[i])):
-                    #mean = get_mean(file, i)
                     col_name = headers[i - 1]
                     if col_name in dict_means:
                         mean = dict_means[col_name]
@@ -181,12 +202,26 @@ def fill_values(df):
                         mean = get_mean(df, i)
                         dict_means[col_name] = mean
                     df.set_value(row[0], col_name, mean)
-                    #print(df.iloc[row[0], i-1])
 
     return df
 
 # For Part 4: Generate Features, Predictors
 def discretize(df, column, num_buckets):
+    '''
+    Turns a continuous variable into a discrete one by separating
+    continuous values into intervals
+
+    Inputs:
+            df: a pandas data frame
+            column: specific column to discretize (must have numerical data)
+            num_buckets: the number of intervals to separate the data into
+
+    Returns: pandas data frame where the value in the specified column is the maximum
+    value in the interval into which the original data fell.
+        ex: values range from 0 - 100, user specifies 10 buckets/intervals, [0-10],[11-20], etc.
+            a row with the value 15 will fit into interval [11-20] and will thus be replaced
+            with the number 20.
+    '''
     index = df.columns.get_loc(column) + 1
     min = get_max_and_min(df, column)[0]
     max = get_max_and_min(df, column)[1]
@@ -199,7 +234,15 @@ def discretize(df, column, num_buckets):
     return df
 
 def make_binary(df, column):
-    #df = get_df(file)
+    '''
+    Turns a categorical variable into a binary/dummy variable.
+
+    Inputs:
+            df: a pandas dataframe
+            column: specific column to make binary
+
+    Returns: dataframe where column values greater than 0 have been replaced with 1's.
+    '''
     index = df.columns.get_loc(column) + 1
     for row in df.itertuples():
         if row[index] == 0:
@@ -210,11 +253,23 @@ def make_binary(df, column):
 
 # Parts 5 and 6: Build and Evaluate Classifier
 def log_reg(file, dis_var, num_buckets, bin_var):
+    '''
+    Uses patsy and sklearn to perform a logistic regression on data.
+
+    Inputs:
+            file: csv file to be read
+            dis_var: variable (column name) to be discretized
+            num_buckets: number of intervals for discrete variable
+            bin_var: variable (column name) to be turned into dummy var
+
+    Returns: Accuracy score for the regression
+    '''
     df = get_df(file)
     filled_df = fill_values(df)
     dis_df = discretize(filled_df, dis_var, num_buckets)
     bin_df = make_binary(dis_df, bin_var)
-    # I learned how to do the following from this example: http://nbviewer.jupyter.org/gist/justmarkham/6d5c061ca5aee67c4316471f8c2ae976
+    # I learned how to do the following from this example:
+    # http://nbviewer.jupyter.org/gist/justmarkham/6d5c061ca5aee67c4316471f8c2ae976
     # Not sure if this is what we were supposed to do or not
     y, X = dmatrices('SeriousDlqin2yrs ~ RevolvingUtilizationOfUnsecuredLines + age + '
                      'DebtRatio + NumberOfOpenCreditLinesAndLoans + zipcode + '
@@ -224,6 +279,8 @@ def log_reg(file, dis_var, num_buckets, bin_var):
     model = LogisticRegression()
     model_fitted = model.fit(X, y)
     return model_fitted.score(X, y)
+
+
 
 
 
