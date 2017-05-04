@@ -24,6 +24,9 @@ import matplotlib.pyplot as plt
 from scipy import optimize
 import time
 import seaborn as sns
+from HW3_explore import get_df
+from HW3_preprocess import find_nans, fill_values, discretize, make_dummies
+
 
 
 
@@ -173,9 +176,8 @@ def clf_loop(models_to_run, clfs, grid, X, y):
                                                        precision_at_k(y_test_sorted, y_pred_probs_sorted, 20.0)]
                     if NOTEBOOK == 1:
                         plot_precision_recall_n(y_test, y_pred_probs, clf)
-                except IndexError, e:
-                    print
-                    'Error:', e
+                except (IndexError):
+                    print('Error:')
                     continue
     return results_df
 
@@ -185,10 +187,19 @@ def main():
     clfs, grid = define_clfs_params(grid_size)
     models_to_run = ['RF', 'DT', 'KNN', 'ET', 'AB', 'GB', 'LR', 'NB']
 
-    df = pd.read_csv("/Users/rayid/Projects/uchicago/Teaching/MLPP-2017/Homeworks/Assignment 2/credit-data.csv")
-    features = ['RevolvingUtilizationOfUnsecuredLines', 'DebtRatio', 'age', 'NumberOfTimes90DaysLate']
-    X = df[features]
-    y = df.SeriousDlqin2yrs
+    #make the df
+    df = get_df("credit-data.csv")
+    #fill nans
+    new_df = fill_values(df, "MonthlyIncome")
+    filled_df = fill_values(new_df, "NumberOfDependents", 0)
+    #discretize a variable
+    discretize(filled_df, "MonthlyIncome", 3)
+    #make one column into dummies
+    make_dummies(filled_df, ["NumberOfDependents"])
+
+    features = ['RevolvingUtilizationOfUnsecuredLines', 'DebtRatio', 'age', 'NumberOfTimes90DaysLate', 'MonthlyIncome']
+    X = filled_df[features]
+    y = filled_df.SeriousDlqin2yrs
     results_df = clf_loop(models_to_run, clfs, grid, X, y)
     if NOTEBOOK == 1:
         results_df
