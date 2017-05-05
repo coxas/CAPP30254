@@ -26,12 +26,13 @@ import time
 import seaborn as sns
 from HW3_explore import get_df
 from HW3_preprocess import find_nans, fill_values, discretize, make_dummies
+import time
 
 
 
 
 
-NOTEBOOK = 0
+NOTEBOOK = 1
 
 
 def define_clfs_params(grid_size):
@@ -94,7 +95,7 @@ def define_clfs_params(grid_size):
         'NB': {},
         'DT': {'criterion': ['gini'], 'max_depth': [1], 'max_features': ['sqrt'], 'min_samples_split': [10]},
         'SVM': {'C': [0.01], 'kernel': ['linear']},
-        'KNN': {'n_neighbors': [5], 'weights': ['uniform'], 'algorithm': ['auto']}
+        'KNN': {'n_neighbors': [10], 'weights': ['uniform'], 'algorithm': ['auto']}
     }
 
     if (grid_size == 'large'):
@@ -164,12 +165,14 @@ def clf_loop(models_to_run, clfs, grid, X, y):
             parameter_values = grid[models_to_run[index]]
             for p in ParameterGrid(parameter_values):
                 try:
+                    start_time = time.time()
                     clf.set_params(**p)
                     y_pred_probs = clf.fit(X_train, y_train).predict_proba(X_test)[:, 1]
                     # you can also store the model, feature importances, and prediction scores
                     # we're only storing the metrics for now
                     y_pred_probs_sorted, y_test_sorted = zip(*sorted(zip(y_pred_probs, y_test), reverse=True))
-                    results_df.loc[len(results_df)] = [models_to_run[index], clf, p,
+                    run_time = time.time() - start_time
+                    results_df.loc[len(results_df)] = [models_to_run[index], clf, run_time,
                                                        roc_auc_score(y_test, y_pred_probs),
                                                        precision_at_k(y_test_sorted, y_pred_probs_sorted, 5.0),
                                                        precision_at_k(y_test_sorted, y_pred_probs_sorted, 10.0),
@@ -183,7 +186,7 @@ def clf_loop(models_to_run, clfs, grid, X, y):
 
 
 def main():
-    grid_size = 'small'
+    grid_size = 'test'
     clfs, grid = define_clfs_params(grid_size)
     models_to_run = ['RF', 'DT', 'KNN', 'ET', 'AB', 'GB', 'LR', 'NB']
 
@@ -203,7 +206,7 @@ def main():
     results_df = clf_loop(models_to_run, clfs, grid, X, y)
     if NOTEBOOK == 1:
         results_df
-    results_df.to_csv('results_large.csv', index=False)
+    results_df.to_csv('results_test.csv', index=False)
 
 
 if __name__ == '__main__':

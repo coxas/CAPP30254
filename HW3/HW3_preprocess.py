@@ -3,7 +3,7 @@
 
 import math
 import pandas as pd
-from HW3_exploreFUNCTIONS import get_df, get_mean, get_max_and_min
+from HW3_explore import get_df, get_mean, get_max_and_min
 
 def find_nans(df):
     col_nans = []
