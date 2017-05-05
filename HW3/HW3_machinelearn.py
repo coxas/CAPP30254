@@ -30,7 +30,7 @@ from HW3_preprocess import find_nans, fill_values, discretize, make_dummies
 
 
 
-# if you're running this in a jupyter notebook, print out the graphs
+
 NOTEBOOK = 0
 
 
@@ -183,7 +183,7 @@ def clf_loop(models_to_run, clfs, grid, X, y):
 
 
 def main():
-    grid_size = 'test'
+    grid_size = 'small'
     clfs, grid = define_clfs_params(grid_size)
     models_to_run = ['RF', 'DT', 'KNN', 'ET', 'AB', 'GB', 'LR', 'NB']
 
@@ -203,7 +203,7 @@ def main():
     results_df = clf_loop(models_to_run, clfs, grid, X, y)
     if NOTEBOOK == 1:
         results_df
-    results_df.to_csv('results.csv', index=False)
+    results_df.to_csv('results_large.csv', index=False)
 
 
 if __name__ == '__main__':
